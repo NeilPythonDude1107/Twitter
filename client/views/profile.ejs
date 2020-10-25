@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Twitter</title>
+    <link rel="stylesheet" href="/css/profile.css" />
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <script src="https://kit.fontawesome.com/a076d05399.js"></script>
+  </head>
+  <body>
+    <header class="top">
+      <nav class="nav">
+        <div class="nav__controls nav__controls--left">
+          <li class="nav__item">
+            <a class="nav__link" href="/">
+              <i class="fas fa-home fa-lg"></i>
+              <span class="nav__link--text">Home</span>
+            </a>
+          </li>
+          <li class="nav__item">
+            <a class="nav__link" href="/">
+              <i class="fas fa-bell fa-lg"></i>
+              <span class="nav__link--text">Notifications</span>
+            </a>
+          </li>
+          <li class="nav__item">
+            <a class="nav__link" href="/">
+              <i class="fas fa-inbox fa-lg"></i>
+              <span class="nav__link--text">Messages</span>
+            </a>
+          </li>
+          <li class="nav__item nav__item--active">
+            <a class="nav__link" onclick="window.location.replace(`/user/${localStorage.getItem('User')}`)">
+              <i class="fas fa-user-circle fa-lg"></i>
+              <span class="nav__link--text">Profile</span>
+            </a>
+          </li>
+        </div>
+        <div class="nav__brand">
+          <a class="nav__link" href="/">
+            <i class="fab fa-twitter fa-2x" aria-hidden="true"></i>
+          </a>
+        </div>
+        <div class="nav__controls nav__controls--right">
+          <button class="nav__btn" onclick="logoutUser()">Logout</button>
+        </div>
+      </nav>
+    </header>
+    <div class="profile-container">
+      <div class="profile-container-wrapper">
+        <div class="profile-photo">
+          <div id="image"></div>
+        </div>
+        <div class="profile-info">
+          <span class="following-count"><b>FOLLOWING</b> 546</span>•<span
+            class="follower-count"
+            ><b>FOLLOWERS</b> 945</span
+          >
+          <br />
+          <span class="display-name" id="display__name"></span>
+          <span class="username" id="username"></span>
+          <span class="website" id="website"><a href="#"></a></span>
+          <br />
+          <span class="join-date">Joined November, 2020</span>
+        </div>
+        <div class="profile-bio">
+          <span>Bio</span>
+          <p id="bio"></p>
+        </div>
+        <div id='image_change'>
+
+        </div>
+      </div>
+    </div>
+
+    <div class="profile-links-container">
+      <ul>
+        <li>
+          <h4 class="active"><a href="#" id="tweets-link">TWEETS</a></h4>
+        </li>
+        <li>
+          <h4><a href="#" id="media-link">MEDIA</a></h4>
+        </li>
+        <li>
+          <h4><a href="#" id="likes-link">LIKES</a></h4>
+        </li>
+      </ul>
+    </div>
+
+    <div class="tweets" id="tweets"></div>
+    <script>
+      const user = `<%=user%>`
+      if (user === localStorage.getItem('User')) {
+        document.getElementById("image_change").innerHTML = 
+        `
+        <div class='comment__input'>
+          <input type='text' class='post__comment' id='image__box'>
+          <button class="sidebar__tweet comment__button" type='submit' onclick='(e) => e.preventDefault(); changeImage()'>
+            Change Image
+          </button>
+        </div>
+        `
+      }
+      axios
+        .post("http://localhost:5000/api/profile", {
+          user,
+        })
+        .then((res) => {
+          const user = res.data.user;
+          document.getElementById(
+            "image"
+          ).innerHTML = `<img src=${user.image}>`;
+          document.getElementById(
+            "website"
+          ).innerHTML = `https://${user.username}.com`;
+          document.getElementById(
+            "bio"
+          ).innerHTML = `This is ${user.username}'s bio!`;
+          document.getElementById(
+            "display__name"
+          ).innerHTML = `@${user.username}`;
+          document.getElementById("username").innerHTML = `${user.username}`;
+          if (document.getElementById('image__box')) {
+            document.getElementById('image__box').value = user.image
+          }
+        })
+        .catch((err) => {
+          console.log(err.response.data.error);
+        });
+
+      function logoutUser() {
+        localStorage.removeItem("User");
+        window.location.replace("/login");
+      }
+      function getUserTweets() {
+        axios
+          .post(`http://localhost:5000/api/get/user/tweets`, {
+            user,
+          })
+          .then((res) => {
+            if (res.data.tweets) {
+              res.data.tweets.forEach((tweet) => {
+                const divClass = document.createElement("div");
+                var html = `
+                <div class="tweet-block">
+                  <img src=${tweet.postedBy.image} alt="profile photo" id='user__image__tweet' />
+                  <span class="tweet-content"><span class="display-name">${tweet.postedBy.username}</span>•<span class="username">${tweet.postedBy.username}</span><span class="timestamp">${tweet.createdAt}</span><br>${tweet.body}</span>
+                  <div class="tweet-links">
+                  <span class="reply-tweet-link"><a href="#"><img src="https://res.cloudinary.com/jorpdesigns/image/upload/v1533134295/speech-bubble.png" alt="reply tweet" /></a></span>
+                  <span class="retweet-tweet-link"><a href="#"><img src="https://res.cloudinary.com/jorpdesigns/image/upload/v1533134296/retweet.png" alt="retweet tweet" /></a></span>
+                  <span class="like-tweet-link"><a href="#"><img src="https://res.cloudinary.com/jorpdesigns/image/upload/v1533134295/star.png" alt="like tweet" /></a></span>
+                  </div>
+                </div>
+                `;
+                var Imagehtml = `
+                    <div class="tweet-block">
+                      <img src=${tweet.postedBy.image} alt="profile photo" id='user__image__tweet' />
+                      <span class="tweet-content"><span class="display-name">${tweet.postedBy.username}</span>•<span class="username">${tweet.postedBy.username}</span><span class="timestamp">${tweet.createdAt}</span><br>${tweet.body}</span><br><img src=${tweet.image} id='post__image'>
+                      <div class="tweet-links">
+                      <span class="reply-tweet-link"><a href="#"><img src="https://res.cloudinary.com/jorpdesigns/image/upload/v1533134295/speech-bubble.png" alt="reply tweet" /></a></span>
+                      <span class="retweet-tweet-link"><a href="#"><img src="https://res.cloudinary.com/jorpdesigns/image/upload/v1533134296/retweet.png" alt="retweet tweet" /></a></span>
+                      <span class="like-tweet-link"><a href="#"><img src="https://res.cloudinary.com/jorpdesigns/image/upload/v1533134295/star.png" alt="like tweet" /></a></span>
+                      </div>
+                    </div>
+                    `;
+                if (tweet.image) {
+                  divClass.innerHTML = Imagehtml;
+                  const div = document.getElementById("tweets");
+                  div.appendChild(divClass);
+                } else {
+                  divClass.innerHTML = html;
+                  const div = document.getElementById("tweets");
+                  div.appendChild(divClass);
+                }
+              });
+            }
+          });
+      }
+
+      getUserTweets();
+      function changeImage() {
+        const image = document.getElementById('image__box').value
+        axios.post('http://localhost:5000/api/edit/account', {
+          image, 
+          username: user
+        })
+        .then(res => {
+          window.location.reload()
+        })
+        .catch(err => {
+          console.log(err.response.data.error)
+        })
+      }
+    </script>
+  </body>
+</html>
